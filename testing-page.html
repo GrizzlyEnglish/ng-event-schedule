@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+
+
+    <head>
+        <link rel="stylesheet" href="bootstrap.css">
+        <script src="jquery-3.2.1.min.js"></script>
+        <script src="bootstrap.min.js"></script>
+        <style>
+            .sch-table{
+                width: 1135px;
+            }
+
+            .sch-sub{
+                table-layout: fixed;
+            }
+            
+            .sch-table td {
+                border: 1px solid #ddd;
+                height: 35px;
+                padding: 0;
+            }
+
+            .sch-table table {
+                width: 100%;
+            }
+
+            .sch-scroll-td {
+                overflow-x: auto;
+            }
+
+            .sch-resize{
+                background: #eee;
+                cursor: col-resize;
+                width: 6px;
+                height: 100%;
+            }
+
+            .sch-time-header{
+                /*width: 58px;
+                max-width: 58px;*/
+                height: 22px;
+                text-align: center;
+            }
+
+            .sch-cell{
+                width: 28px;
+                max-width: 28px;
+            }
+
+            .sch-cell-container{
+                border: 1px solid black;
+                box-shadow: -5px 10px 5px -7px rgba(187,187,187,1);
+                cursor: pointer;
+                overflow: hidden;
+                height: 20px;
+                margin-top: -14px;
+            }
+
+            .sch-cell-container p{
+                color: white;
+            }
+
+            .sch-cell-container:hover{
+                box-shadow: -5px 10px 5px -7px #4D4D4D;
+            }
+
+            .sch-void-cell{
+                border: none !important;
+            }
+
+            .sch-btn-right {
+                text-align: right;
+            }
+
+            .sch-row-space{
+                margin-bottom: 10px; 
+            }
+
+            .sch-col-hack{
+                padding-top: 5px;
+            }
+
+            .sch-day-header{
+                font-size: 1.25em;
+            }
+
+            .sch-eventer-name{
+                cursor: pointer;
+            }
+
+            .sch-eventer-name-highlight{
+                background: #eee;
+            }
+
+            .sch-eventer-name:hover{
+                background: #eee;
+            }
+
+            .sch-unfocus-cell{
+                opacity: .45;
+            }
+
+            .sch-time-header-highlight{
+                background: #eee;
+            }
+
+            .sch-greyed-cell{
+                background: #eee;
+            }
+
+            .sch-group-row{
+                background: #ddd;
+            }
+
+        </style>
+    </head>
+
+    <body ng-app="app">
+        <h2>Event Scheduler</h2>
+
+        <div class="container">
+            <ng-event-scheduler></ng-event-scheduler>
+        </div>
+
+        <script type="text/javascript" src="moment.js"></script>
+        <script type="text/javascript" src="angular.min.js"></script>
+        <script type="text/ng-template" id="ngEventSchedulerTemplate">
+        
+            <div class="row sch-row-space">
+                <div class="col-sm-2 col-md-2">
+                    <button class="btn btn-default" title="Last Month">
+                        <span><<</span>
+                    </button>
+                    <button class="btn btn-default" title="Last Day">
+                        <span><</span>
+                    </button>
+                </div>
+                <div class="col-sm-8 col-md-8 text-center sch-col-hack">
+                    <label class="sch-day-header">{{schedCtrl.showingDate.format('MMMM Do YYYY')}}<label>
+                </div>
+                <div class="col-sm-2 col-md-2 sch-btn-right">
+                    <button class="btn btn-default" title="Next Day">
+                        <span>></span>
+                    </button>
+                    <button class="btn btn-default" title="Next Month">
+                        <span>>></span>
+                    </button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12">
+                    <table class="sch-table" id="schedulerTable">
+                        <tbody>
+                            <td>
+                                <div style="height: 100%; width: {{schedCtrl.colSplit.lVal}}px">
+                                    <table class="sch-sub">
+                                        <tbody>
+                                            <tr>
+                                                <td class="sch-greyed-cell"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div style="max-height: 1000px; max-width: {{schedCtrl.colSplit.lVal + 20}}px; overflow:hidden">
+                                        <div id="nameScroll" style="max-height: 1000px; overflow:auto; width: {{schedCtrl.colSplit.lVal + 20}}px"
+                                        onscroll="angular.element(this).scope().schedCtrl.scrollLeft()">
+                                            <table>
+                                                <tr ng-repeat="eventer in schedCtrl.schedule.eventers" 
+                                                ng-class="{'sch-eventer-name': !eventer.isGroupHeader, 'sch-group-row': eventer.isGroupHeader}">
+                                                    <td ng-mouseover="schedCtrl.hoverEventer(eventer,true)"
+                                                    ng-mouseleave="schedCtrl.hoverEventer(eventer, false)" 
+                                                    ng-class="{'sch-eventer-name-highlight': eventer.forceFocus}"
+                                                    ng-click="schedCtrl.forceFocus(eventer)">
+                                                        <span>&nbsp;</span>
+                                                        <span>{{eventer.name}}</span>
+                                                    </td>
+                                                </tr>
+                                                <tr ng-if="schedCtrl.schedule.eventers.length > 29">
+                                                    <td class="sch-void-cell"></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="sch-resize" draggable="true" ondrag="angular.element(this).scope().schedCtrl.resizeCols(event)" 
+                            ondragend="angular.element(this).scope().schedCtrl.resetDrag(event)"></div>
+                            </td>
+                            <td>
+                                <div style="width: {{schedCtrl.colSplit.rVal}}px">
+                                    <div style="width: 100%; height: 36px; overflow: hidden">
+                                        <div id="hrScroll" style="width: 100%; overflow:auto">
+                                            <table class="sch-sub">
+                                                <colgroup>
+                                                    <col style="width: 58px" ng-repeat="hr in schedCtrl.hours">
+                                                    <col style="width: 29px">
+                                                </colgroup>
+                                                <tr>
+                                                    <td class="sch-time-header" ng-repeat="hr in schedCtrl.hours"
+                                                    ng-class="{'sch-time-header-highlight': hr.highlight}">
+                                                        <label>{{hr.title}}</label>
+                                                    </td>
+                                                    <td class="sch-void-cell"></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div id="evtScroll" style="max-height: 1000px; overflow: auto" 
+                                    onscroll="angular.element(this).scope().schedCtrl.scrollRight(event)">
+                                        <table class="sch-sub">
+                                            <colgroup>
+                                                <col style="width: 29px" ng-repeat="hr in schedCtrl.slotArr track by $index">
+                                                <col style="width: 2px">
+                                            </colgroup>
+                                            <tr ng-repeat="eventer in schedCtrl.schedule.eventers" 
+                                            ng-class="{'sch-group-row': eventer.isGroupHeader}">
+                                                <td class="sch-cell" ng-repeat="evt in eventer.events track by $index" colspan="{{evt.colspan}}"
+                                                ng-class="{'sch-unfocus-cell': schedCtrl.checkUnFocused(eventer, evt),
+                                                'sch-sm-cell': evt.colspan == 2}"
+                                                ng-mouseover="schedCtrl.hoverEvent(evt, true)" ng-mouseleave="schedCtrl.hoverEvent(evt, false)"
+                                                ng-click="schedCtrl.clickedEvent(evt)">
+                                                    <div ng-if="!evt.isEmpty" class="sch-cell-container"
+                                                    data-toggle="tooltip" data-placement="top" title="{{evt.colspan <= 2 ? evt.title : ''}}"
+                                                    style="background: {{evt.backgroundColor}};">
+                                                        <p>{{evt.title}}</p>
+                                                    </div>
+                                                    <div ng-if="evt.isEmpty">
+                                                        <label>&nbsp;</label>
+                                                    </div>
+                                                </td>
+                                                <td class="sch-void-cell"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tbody>
+                    </table>
+                </div>
+                <ng-event-scheduler-modal event="schedCtrl.highlightEvent" evt-modal-show="schedCtrl.showEventModal"></ng-event-scheduler-modal>
+            </div>
+        </script>
+        <script type="text/ng-template" id="ngEventSchedulerModalTemplate">
+            <div class="modal fade" ng-scheduler-modal-helper="schedModal.evtModalShow">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Event Viewer</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="container">
+                                <div class="row" ng-repeat="(key, value) in schedModal.event">
+                                    <div class="col-sm-12 col-md-12">
+                                        <label>{{key}} : {{value}}</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary">Save changes</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+        </script>
+        <script>
+            angular.module("app", []);
+
+            $(function () {
+                $('[data-toggle="tooltip"]').tooltip()
+            });
+        </script>
+        <script type="text/javascript" src="fake-data.js"></script>
+        <script type="text/javascript" src="ng-event-scheduler.js"></script>
+    </body>
+
+    <footer></footer>
+
+
+</html>
