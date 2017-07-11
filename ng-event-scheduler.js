@@ -215,7 +215,7 @@
                         vm.colSplit.rPerc = .1;
                     }
                 }
-                console.log(vm.colSplit)
+                
                 vm.colSplit.lVal = vm.getSideHeight(vm.colSplit.lPerc);
                 vm.colSplit.rVal = vm.getSideHeight(vm.colSplit.rPerc);
 
@@ -286,6 +286,12 @@
             vm.clickedEvent = function (evt) {
                 vm.highlightEvent = evt;
                 vm.showEventModal = true;
+            };
+
+            vm.zipGroup = function (group){
+                vm.schedule.eventers.forEach(function(element) {
+                    if(element.group === group) element.isZipped = !element.isZipped;
+                }, this);
             };
 
         },

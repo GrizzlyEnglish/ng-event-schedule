@@ -113,6 +113,10 @@
                 background: #ddd;
             }
 
+            .sch-group-header{
+                cursor: pointer;
+            }
+
         </style>
     </head>
 
@@ -165,14 +169,21 @@
                                         <div id="nameScroll" style="max-height: 1000px; overflow:auto; width: {{schedCtrl.colSplit.lVal + 20}}px"
                                         onscroll="angular.element(this).scope().schedCtrl.scrollLeft()">
                                             <table>
-                                                <tr ng-repeat="eventer in schedCtrl.schedule.eventers" 
+                                                <tr ng-repeat="eventer in schedCtrl.schedule.eventers" ng-hide="eventer.isZipped"
                                                 ng-class="{'sch-eventer-name': !eventer.isGroupHeader, 'sch-group-row': eventer.isGroupHeader}">
-                                                    <td ng-mouseover="schedCtrl.hoverEventer(eventer,true)"
+                                                    <td ng-if="!eventer.isGroupHeader" ng-mouseover="schedCtrl.hoverEventer(eventer,true)"
                                                     ng-mouseleave="schedCtrl.hoverEventer(eventer, false)" 
                                                     ng-class="{'sch-eventer-name-highlight': eventer.forceFocus}"
                                                     ng-click="schedCtrl.forceFocus(eventer)">
                                                         <span>&nbsp;</span>
                                                         <span>{{eventer.name}}</span>
+                                                    </td>
+                                                    <td ng-if="eventer.isGroupHeader" class="sch-group-header"
+                                                    ng-click="schedCtrl.zipGroup(eventer.name)">
+                                                        <span>&nbsp;</span>
+                                                        <span>{{eventer.name}}</span>
+                                                        <span ng-hide="eventer.isZipped">&#9650;</span>
+                                                        <span ng-hide="!eventer.isZipped">&#9660;</span>
                                                     </td>
                                                 </tr>
                                                 <tr ng-if="schedCtrl.schedule.eventers.length > 29">
@@ -213,7 +224,7 @@
                                                 <col style="width: 29px" ng-repeat="hr in schedCtrl.slotArr track by $index">
                                                 <col style="width: 2px">
                                             </colgroup>
-                                            <tr ng-repeat="eventer in schedCtrl.schedule.eventers" 
+                                            <tr ng-repeat="eventer in schedCtrl.schedule.eventers" ng-hide="eventer.isZipped"
                                             ng-class="{'sch-group-row': eventer.isGroupHeader}">
                                                 <td class="sch-cell" ng-repeat="evt in eventer.events track by $index" colspan="{{evt.colspan}}"
                                                 ng-class="{'sch-unfocus-cell': schedCtrl.checkUnFocused(eventer, evt),
