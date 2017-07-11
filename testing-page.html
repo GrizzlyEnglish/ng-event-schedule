@@ -6,6 +6,7 @@
         <link rel="stylesheet" href="bootstrap.css">
         <script src="jquery-3.2.1.min.js"></script>
         <script src="bootstrap.min.js"></script>
+        
         <style>
             .sch-table{
                 width: 1135px;
@@ -117,6 +118,14 @@
                 cursor: pointer;
             }
 
+            .sch-zip-row.ng-hide{
+                opacity: 0;
+            }
+
+            .sch-zip-row{
+                transition: all linear 0.2s;
+            }
+
         </style>
     </head>
 
@@ -133,10 +142,10 @@
         
             <div class="row sch-row-space">
                 <div class="col-sm-2 col-md-2">
-                    <button class="btn btn-default" title="Last Month">
+                    <button class="btn btn-default" title="Last Month" ng-click="schedCtrl.changeMonth(-1)">
                         <span><<</span>
                     </button>
-                    <button class="btn btn-default" title="Last Day">
+                    <button class="btn btn-default" title="Last Day" ng-click="schedCtrl.changeDay(-1)">
                         <span><</span>
                     </button>
                 </div>
@@ -144,10 +153,10 @@
                     <label class="sch-day-header">{{schedCtrl.showingDate.format('MMMM Do YYYY')}}<label>
                 </div>
                 <div class="col-sm-2 col-md-2 sch-btn-right">
-                    <button class="btn btn-default" title="Next Day">
+                    <button class="btn btn-default" title="Next Day" ng-click="schedCtrl.changeDay(-1)">
                         <span>></span>
                     </button>
-                    <button class="btn btn-default" title="Next Month">
+                    <button class="btn btn-default" title="Next Month" ng-click="schedCtrl.changeMonth(1)">>
                         <span>>></span>
                     </button>
                 </div>
@@ -168,8 +177,8 @@
                                     <div style="max-height: 1000px; max-width: {{schedCtrl.colSplit.lVal + 20}}px; overflow:hidden">
                                         <div id="nameScroll" style="max-height: 1000px; overflow:auto; width: {{schedCtrl.colSplit.lVal + 20}}px"
                                         onscroll="angular.element(this).scope().schedCtrl.scrollLeft()">
-                                            <table>
-                                                <tr ng-repeat="eventer in schedCtrl.schedule.eventers" ng-hide="eventer.isZipped"
+                                            <table class="sch-table">
+                                                <tr ng-repeat="eventer in schedCtrl.schedule.eventers" ng-hide="eventer.isZipped" class="sch-zip-row"
                                                 ng-class="{'sch-eventer-name': !eventer.isGroupHeader, 'sch-group-row': eventer.isGroupHeader}">
                                                     <td ng-if="!eventer.isGroupHeader" ng-mouseover="schedCtrl.hoverEventer(eventer,true)"
                                                     ng-mouseleave="schedCtrl.hoverEventer(eventer, false)" 
@@ -224,7 +233,7 @@
                                                 <col style="width: 29px" ng-repeat="hr in schedCtrl.slotArr track by $index">
                                                 <col style="width: 2px">
                                             </colgroup>
-                                            <tr ng-repeat="eventer in schedCtrl.schedule.eventers" ng-hide="eventer.isZipped"
+                                            <tr ng-repeat="eventer in schedCtrl.schedule.eventers" ng-hide="eventer.isZipped" class="sch-zip-row"
                                             ng-class="{'sch-group-row': eventer.isGroupHeader}">
                                                 <td class="sch-cell" ng-repeat="evt in eventer.events track by $index" colspan="{{evt.colspan}}"
                                                 ng-class="{'sch-unfocus-cell': schedCtrl.checkUnFocused(eventer, evt),
@@ -281,7 +290,7 @@
         
         </script>
         <script>
-            angular.module("app", []);
+            angular.module("app", ['ngAnimate']);
 
             $(function () {
                 $('[data-toggle="tooltip"]').tooltip()
@@ -289,6 +298,7 @@
         </script>
         <script type="text/javascript" src="fake-data.js"></script>
         <script type="text/javascript" src="ng-event-scheduler.js"></script>
+        <script src="angular-animate.js"></script>
     </body>
 
     <footer></footer>
