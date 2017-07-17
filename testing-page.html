@@ -125,6 +125,10 @@
             .sch-zip-row{
                 transition: all linear 0.2s;
             }
+            
+            .sch-firefox-fix {
+                vertical-align: top;
+            }
 
         </style>
     </head>
@@ -165,7 +169,7 @@
                 <div class="col-xs-12 col-sm-12 col-md-12">
                     <table class="sch-table" id="schedulerTable">
                         <tbody>
-                            <td>
+                            <td class="sch-firefox-fix">
                                 <div style="height: 100%; width: {{schedCtrl.colSplit.lVal}}px">
                                     <table class="sch-sub">
                                         <tbody>
