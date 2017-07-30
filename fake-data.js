@@ -40,8 +40,10 @@ function getEvents(isLandscping){
         let offset = Math.round(Math.random() * 3) + 1;
         let end = hour + offset;
         let evt = getEvent(hour, end, getTitle(isLandscping), getColor());
+        if(evt.start.date() !== evt.end.date()) break;
         events.push(evt);
-        hour = end;
+        offset = Math.floor(Math.random() + Math.random());
+        hour = end + offset;
     }
     return events;
 };

@@ -23,30 +23,130 @@
         localScope.forcedFocusCount = 0;
         localScope.showEventModal = false;
         localScope.highlightEvent = null;
+        localScope.selectedHourOne = null;
+        localScope.selectedHourTwo = null;
+        localScope.colWidth = 58;
+        localScope.defaultHours = ['12 am', '1 am','2 am','3 am','4 am','5 am', '6 am','7 am','8 am'
+            ,'9 am','10 am','11 am', '12 pm','1 pm','2 pm','3 pm','4 pm','5 pm','6 pm', '7 pm', '8 pm', '9 pm', '10 pm', '11 pm'];
     };
 
     angular.module("app").component("ngEventScheduler", {
 
         bindings:{
             schedule: '=?',
-            getDayScheduleFunc: '&'
+            modalOptions: '=',
+
+            showingDate: '@',
+
+            getDaySchedule: '&',
         },
 
         controller: function ($scope){
-            
             var vm = this;
 
-            vm.changeMonth = function (diff){
+            vm.clickedHeader = function (hour) {
+                if(vm.selectedHourOne !== null && vm.selectedHourTwo !== null){
+                    vm.selectedHourOne.isSelected = false;
+                    vm.selectedHourTwo.isSelected = false;
+                    vm.selectedHourOne = null;
+                    vm.selectedHourTwo = null;
+                    vm.resetFilters();
+                    return;
+                }
 
+                hour.isSelected = !hour.isSelected;
+
+                if(vm.selectedHourOne === null) vm.selectedHourOne = hour;
+                else {
+                    vm.selectedHourTwo = hour;
+                    vm.filterHours();
+                }
+            };
+
+            vm.resetFilters = function (){
+                vm.schedule.eventers.forEach(function (eventer) {
+                     eventer.events.forEach(function (evt) {
+                        evt.isHidden = false;
+                    });
+                });
+            };
+
+            vm.filterHours = function () {
+                var order = vm.getHourOrder();
+
+                vm.schedule.eventers.forEach(function (eventers){
+                    eventers.events.forEach(function (evt){
+                        var evtStart = evt.start.hour();
+                        var evtEnd = evt.end.hour();
+                        if((evtStart >= order.one && evtEnd <= order.two) || (evtStart >= order.one && evtStart <= order.two))
+                             //evt.isHidden = false;
+                        evt.backgroundColor = "white";
+                        //else evt.isHidden = true;
+                        else evt.backgroundColor = "green";
+                    });
+                });
+            };
+
+            vm.getHourTime = function (timeStr) {
+                var hr = parseInt(timeStr);
+
+                if(timeStr.includes("am") && hr === 12){
+                    return 0;
+                } else if(timeStr.includes("pm")){
+                    return hr + 12;
+                }
+
+                return hr;
+            };
+
+            vm.getHourOrder = function () {
+                var hourOne = vm.selectedHourOne;
+                var hourTwo = vm.selectedHourTwo;
+
+                let splitOne = hourOne.title.split(" ");
+                let splitTwo = hourTwo.title.split(" ");
+                
+                let hrOne;
+                let hrTwo;
+
+                if(splitOne[1] !== splitTwo[1]){
+                    if(splitOne[1] === 'am'){
+                        hrOne = hourOne;
+                        hrTwo = hourTwo;
+                    } else {
+                        hrOne = hourTwo;
+                        hrTwo = hourOne;
+                    }
+                } else {
+                    let testOne = parseInt(splitOne[0]);
+                    let testTwo = parseInt(splitTwo[0]);
+
+                    if(testOne > testTwo){
+                        hrOne = hourOne;
+                        hrTwo = hourTwo;
+                    } else {
+                        hrOne = hourTwo;
+                        hrTwo = hourOne;
+                    }
+                }
+
+                return {
+                    one: vm.getHourTime(hrOne.title),
+                    two: vm.getHourTime(hrTwo.title)
+                }
+            };
+
+            vm.changeMonth = function (diff){
+                
             };
 
             vm.changeDay = function (diff){
-
+                
             };
 
             vm.$onInit = function (){
                 initScheduler(vm);
-                vm.setHours();
+                vm.setHours(vm.defaultHours);
                 vm.setupRow();
                 vm.setupSchedule();
 
@@ -115,11 +215,7 @@
                 return output;
             };
 
-            vm.setHours = function (){
-                let hrs = ['12 am', '1 am','2 am','3 am','4 am','5 am', '6 am','7 am','8 am','9 am','10 am','11 am', 
-                    '12 pm','1 pm','2 pm','3 pm','4 pm','5 pm','6 pm', '7pm', '8pm', '9pm', '10 pm', '11 pm'];
-
-                
+            vm.setHours = function (hrs){
                 for(var i = 0; i < hrs.length; i++){
                     let hrObj = {
                         'title': hrs[i],
@@ -174,16 +270,25 @@
                 return cells;
             };
 
-            vm.emptyCell = function (bColor){
+            vm.getSlotHour = function (position){
+                var hrStart = 0;
+                var hrEnd = 24;
+                var hrLength = vm.slots / (hrEnd - hrStart);
+                return hrStart + (position / hrLength);
+            };
+
+            vm.emptyCell = function (bColor, position){
+                var hr = vm.getSlotHour(position);
                 return {
                     'isEmpty': true, 
-                    'colspan': 1, 
+                    'colspan': 1,
+                    'start': moment().hour(hr),
+                    'end': moment().hour(hr),
                     'backgroundColor': bColor
                 };
             };
 
             vm.getSideHeight = function (percent){
-                //percent = Math.ceil(percent * 100) / 100;
                 var w = Math.floor(((vm.tableWidth*percent)));
                 return w;
             };
@@ -280,6 +385,7 @@
                 let end = evt.endLoc / 2;
                 for(var i = start; i < end; i++){
                     vm.hours[i].highlight = bool;
+                    //vm.hours[i].isSelected = false;
                 }
             };
 

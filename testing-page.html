@@ -40,8 +40,13 @@
             .sch-time-header{
                 /*width: 58px;
                 max-width: 58px;*/
+                 cursor: pointer; 
                 height: 22px;
                 text-align: center;
+            }
+
+            .sch-time-header label {
+                 cursor: pointer;
             }
 
             .sch-cell{
@@ -106,6 +111,10 @@
                 background: #eee;
             }
 
+            .sch-time-header-selected {
+                background: #FBFF85;
+            }
+
             .sch-greyed-cell{
                 background: #eee;
             }
@@ -137,14 +146,19 @@
         <h2>Event Scheduler</h2>
 
         <div class="container">
-            <ng-event-scheduler></ng-event-scheduler>
+            <ng-event-scheduler get-day-schedule="nextDay"></ng-event-scheduler>
         </div>
 
+        <script type="text/javascript">
+            var nextDay = function getNextDay(){
+                console.log('fired');
+            };
+        </script>
         <script type="text/javascript" src="moment.js"></script>
         <script type="text/javascript" src="angular.min.js"></script>
         <script type="text/ng-template" id="ngEventSchedulerTemplate">
         
-            <div class="row sch-row-space">
+            <div id="schedContainer" class="row sch-row-space">
                 <div class="col-sm-2 col-md-2">
                     <button class="btn btn-default" title="Last Month" ng-click="schedCtrl.changeMonth(-1)">
                         <span><<</span>
@@ -157,7 +171,7 @@
                     <label class="sch-day-header">{{schedCtrl.showingDate.format('MMMM Do YYYY')}}<label>
                 </div>
                 <div class="col-sm-2 col-md-2 sch-btn-right">
-                    <button class="btn btn-default" title="Next Day" ng-click="schedCtrl.changeDay(-1)">
+                    <button class="btn btn-default" title="Next Day" ng-click="schedCtrl.changeDay(1)">
                         <span>></span>
                     </button>
                     <button class="btn btn-default" title="Next Month" ng-click="schedCtrl.changeMonth(1)">>
@@ -217,12 +231,14 @@
                                         <div id="hrScroll" style="width: 100%; overflow:auto">
                                             <table class="sch-sub">
                                                 <colgroup>
-                                                    <col style="width: 58px" ng-repeat="hr in schedCtrl.hours">
-                                                    <col style="width: 29px">
+                                                    <col style="width: {{schedCtrl.colWidth}}px" ng-repeat="hr in schedCtrl.hours">
+                                                    <col style="width: {{schedCtrl.colWidth/2}}px">
                                                 </colgroup>
                                                 <tr>
                                                     <td class="sch-time-header" ng-repeat="hr in schedCtrl.hours"
-                                                    ng-class="{'sch-time-header-highlight': hr.highlight}">
+                                                    ng-click="schedCtrl.clickedHeader(hr)"
+                                                    ng-class="{'sch-time-header-highlight': hr.highlight, 
+                                                    'sch-time-header-selected': hr.isSelected}">
                                                         <label>{{hr.title}}</label>
                                                     </td>
                                                     <td class="sch-void-cell"></td>
@@ -239,7 +255,8 @@
                                             </colgroup>
                                             <tr ng-repeat="eventer in schedCtrl.schedule.eventers" ng-hide="eventer.isZipped" class="sch-zip-row"
                                             ng-class="{'sch-group-row': eventer.isGroupHeader}">
-                                                <td class="sch-cell" ng-repeat="evt in eventer.events track by $index" colspan="{{evt.colspan}}"
+                                                <td class="sch-cell" ng-repeat="evt in eventer.events track by $index" 
+                                                colspan="{{evt.colspan}}" ng-hide="evt.isHidden"
                                                 ng-class="{'sch-unfocus-cell': schedCtrl.checkUnFocused(eventer, evt),
                                                 'sch-sm-cell': evt.colspan == 2}"
                                                 ng-mouseover="schedCtrl.hoverEvent(evt, true)" ng-mouseleave="schedCtrl.hoverEvent(evt, false)"
@@ -295,6 +312,12 @@
         </script>
         <script>
             angular.module("app", ['ngAnimate']);
+            
+            var _schedCtrl;
+
+            $(document).ready(function () {
+                _schedCtrl = angular.element($('#schedContainer')).scope().schedCtrl;
+            });
 
             $(function () {
                 $('[data-toggle="tooltip"]').tooltip()
